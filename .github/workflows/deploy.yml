@@ -18,6 +18,12 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      - name: Debug OIDC token claims
+        run: |
+          curl -sH "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
+          | jq -r '.value' | cut -d. -f2 | base64 -d 2>/dev/null | jq .
+
 # 2. BUILD APPLICATION
       - name: Build application
         run: |
@@ -57,8 +63,3 @@ jobs:
         run: |
           aws s3 cp website.zip s3://estyleye-cicd-artifacts/website.zip
 
-      - name: Debug OIDC token claims
-        run: |
-          curl -sH "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" \
-          | jq -r '.value' | cut -d. -f2 | base64 -d 2>/dev/null | jq .
