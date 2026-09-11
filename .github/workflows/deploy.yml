@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+# 1. CHECKOUT SOURCE CODE
       - name: Checkout source code
         uses: actions/checkout@v4
 
+# 2. BUILD APPLICATION
       - name: Build application
         run: |
           echo "Building application..."
@@ -20,14 +22,33 @@ jobs:
           cp index.html build/
           echo "Build completed"
 
+# 3. TEST APPLICATION
       - name: Test application
         run: |
           test -f build/index.html
           echo "Test passed"
 
+# 4. PACKAGE APPLICATION
       - name: Package application
         run: |
           cd build
           zip ../website.zip index.html
           echo "Application packaged"
 
+# 5. AUTHENTICATE TO AWS USING OIDC
+      # --------------------------------------------------
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::905418091094:role/GitHubActionsDeploymentRole
+          aws-region: us-east-1
+
+# 6. Verify that GitHub Actions is authenticated to AWS
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity
+
+# 7. Upload the deployment package to S3
+      - name: Upload artifact to S3
+        run: |
+          aws s3 cp website.zip s3://estyleye-cicd-artifacts/website.zip
