@@ -63,3 +63,21 @@ jobs:
         run: |
           aws s3 cp website.zip s3://estyleye-cicd-artifacts/website.zip
 
+# 8. DEPLOY TO EC2 USING SSM
+      # --------------------------------------------------
+      - name: Deploy to EC2
+        run: |
+          echo "Starting deployment to EC2..."
+
+          aws ssm send-command \
+            --instance-ids "i-0a5f20c4e68a4ec99" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "aws s3 cp s3://estyleye-cicd-artifacts/website.zip /tmp/website.zip",
+              "sudo rm -rf /var/www/html/*",
+              "sudo unzip -o /tmp/website.zip -d /var/www/html/",
+              "sudo systemctl restart apache2"
+            ]' \
+            --comment "Deploy website from GitHub Actions"
+          
+          echo "Deployment command sent to EC2"
